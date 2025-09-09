@@ -3,9 +3,12 @@
 # ==============================
 
 # --- AUTO-ELEVATE (UAC prompt) ---
+# --- AUTO-ELEVATE (UAC prompt) ---
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Start-Process powershell "-ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+
+    # Relaunch with NoExit so window stays open on errors
+    Start-Process powershell "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
     exit
 }
 
@@ -116,7 +119,11 @@ try {
     Show-Menu
 }
 catch {
-    Write-Host "`n[ERROR] $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host "Press any key to exit..."
+    if ($global:LASTEXITCODE -ne 0) {
+    Write-Host "`nInstaller ended with errors. Press any key to exit..." -ForegroundColor Red
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+} else {
+    Write-Host "`nInstaller finished successfully."
+    Start-Sleep -Seconds 2
+}
 }
