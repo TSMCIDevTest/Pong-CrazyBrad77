@@ -5,17 +5,11 @@
 # --- AUTO-ELEVATE (UAC prompt) ---
 # --- AUTO-ELEVATE (UAC prompt) ---
 # Check if running as admin
-$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
-    [Security.Principal.WindowsBuiltInRole] "Administrator")
-
-if (-not $isAdmin) {
-    Write-Warning "Warning: This installer is not running as Administrator."
-    Write-Warning "Some operations (like installing to Program Files) may fail."
-    Write-Warning "Please close this terminal and run PowerShell as Administrator to fully install Pong."
-    Write-Host "`nPress any key to continue (installer will attempt actions anyway)..."
-    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+    [Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Start-Process powershell "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    exit
 }
-
 try {
     # --- CONFIG ---
     $repoOwner = "TSMCIDevTest"
